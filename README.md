@@ -1,4 +1,22 @@
-# Honeypot Analyzer 1.0
+```
+                                     .-.-.-.-.-.-.-.-.
+  _________________________________ (|~|~|~|~|~|~|~|~|)
+ (_________________________________=(|~|~|~|~|~|~|~|~|)
+                                     '-'-'-'-'-|-'-'-'
+                                               |
+                                               :
+                                               '
+                                               .
+
+  █  █  ██  █  █ ████ █  █   ███  ███ ███  ███  ████ ███
+  █  █ █  █ ██ █ █    █  █   █  █  █  █  █ █  █ █    █  █
+  ████ █  █ █ ██ ███   ██    █  █  █  ███  ███  ███  ███
+  █  █ █  █ █  █ █     ██    █  █  █  █    █    █    █ █
+  █  █  ██  █  █ ████  ██    ███  ███ █    █    ████ █  █
+
+        ~ ~ ~   an offline honeypot log analyzer   ~ ~ ~
+      
+```
 
 An offline, deterministic Python analyzer for Cowrie JSONL and the structured logs in T-Pot exports. No AI, API keys, internet access, or third-party Python packages are required. Python 3.10 or newer is required. Runs on Windows, Linux, and macOS.
 
@@ -6,20 +24,20 @@ An offline, deterministic Python analyzer for Cowrie JSONL and the structured lo
 
 
 ```powershell
-py -3 .\analyze.py "$env:USERPROFILE\Desktop\t-pot" --out report-01
+py -3 .\HoneyDipper.py "$env:USERPROFILE\Desktop\t-pot" --out report-01
 Start-Process .\report-01\report.html
 ```
 
 Or pass an archive directly (it is read without extracting files):
 
 ```powershell
-py -3 .\analyze.py "C:\Logs\t-pot.zip" "C:\Logs\cowrie.json" --out report-02
+py -3 .\HoneyDipper.py "C:\Logs\t-pot.zip" "C:\Logs\cowrie.json" --out report-02
 ```
 
 Linux/Kali:
 
 ```bash
-python3 analyze.py /path/to/logs --out report-01
+python3 HoneyDipper.py /path/to/logs --out report-01
 ```
 
 Use a new output directory each time. Existing reports are never overwritten. Keep output directories outside input directories to avoid reingesting exports on later runs.
@@ -27,7 +45,7 @@ Use a new output directory each time. Existing reports are never overwritten. Ke
 ## Filtering and redaction
 
 ```powershell
-py -3 .\analyze.py "C:\Logs\t-pot.zip" --out report-filtered --exclude-ip [IP ADDR] --first-hours 24 --redact YOUR_HONEYPOT_IP --redact YOUR_HOSTNAME
+py -3 .\HoneyDipper.py "C:\Logs\t-pot.zip" --out report-filtered --exclude-ip [IP ADDR] --first-hours 24 --redact YOUR_HONEYPOT_IP --redact YOUR_HOSTNAME
 ```
 
 Replace placeholders with real values. Each `--exclude-ip` accepts an IP or CIDR and can be repeated. Exclusion removes records whose normalized source IP matches. It does not remove that IP if it appears as text in some other record; use `--redact` as well if needed. `--redact` performs literal, case-sensitive replacement throughout generated output, including filenames in evidence references. Redaction is explicit, not automatic discovery of sensitive information. Review before sharing: reports can contain usernames, attempted passwords, IPs, commands, and URL parameters.
@@ -35,7 +53,7 @@ Replace placeholders with real values. Each `--exclude-ip` accepts an IP or CIDR
 `--first-hours 24` starts at the earliest timestamped honeypot event remaining after source exclusions and any explicit time bounds. It does not imply 24 hours were actually observed. End boundaries are exclusive. With several sensors, the earliest eligible sensor determines the shared window.
 
 ```powershell
-py -3 .\analyze.py "C:\Logs" --out report-window --start 2026-10-28T00:00:00Z --end 2026-10-29T00:00:00Z
+py -3 .\HoneyDipper.py "C:\Logs" --out report-window --start 2026-10-28T00:00:00Z --end 2026-10-29T00:00:00Z
 ```
 
 All report times are UTC. Timestamps without offsets are assumed UTC. Untimed records appear in unfiltered runs but are dropped when a time filter is set.
@@ -63,7 +81,7 @@ Counts are **events**, not unique attacks. Cowrie connection and authentication 
 
 By default all records count, including repeated copies. `--deduplicate` removes identical canonical JSON records within the same sensor/category, across files. This is useful for overlapping exports but can remove legitimate repeated identical events, especially untimestamped ones. It is not connection deduplication.
 
-Rules in `RULES` at the top of `analyze.py` identify discovery, download commands, permission changes, persistence/mining/destructive indicators, sensitive web paths, and possible AI/MCP probes. Rules scan command inputs, URI fields, and up to 64 KiB of Honeytrap hex-decoded payload. They do not scan arbitrary base64 or encrypted traffic, emulate a shell, fetch URLs, inspect captured binaries, or execute commands. Unknown variants and obfuscation can evade matches. No match is not proof of absence. Rule matches do not prove exploitation or malicious intent.
+Rules in `RULES` at the top of `HoneyDipper.py` identify discovery, download commands, permission changes, persistence/mining/destructive indicators, sensitive web paths, and possible AI/MCP probes. Rules scan command inputs, URI fields, and up to 64 KiB of Honeytrap hex-decoded payload. They do not scan arbitrary base64 or encrypted traffic, emulate a shell, fetch URLs, inspect captured binaries, or execute commands. Unknown variants and obfuscation can evade matches. No match is not proof of absence. Rule matches do not prove exploitation or malicious intent.
 
 Captured `downloads`, `attacks`, `binaries`, and `tty` directories are skipped. ZIP members are never extracted. Default decompressed limit is 256 MiB per log and 4 MiB per line; limit violations are reported. The program holds normalized events in memory, so use time-scoped exports for very large datasets (time filtering happens after ingestion). Aggregate archive size and number of files are not bounded. Run without administrator/root privileges.
 
@@ -77,7 +95,7 @@ ip,country,asn,organization
 ```
 
 ```powershell
-py -3 .\analyze.py "C:\Logs" --out report-geo --geo-csv .\ip_lookup.csv
+py -3 .\HoneyDipper.py "C:\Logs" --out report-geo --geo-csv .\ip_lookup.csv
 ```
 
 This is an exact-IP join in `source_ips.csv`, not a bundled GeoIP database or automatic lookup. Missing values are Unknown. Maintain the lookup table separately; geolocation is approximate and identifies infrastructure, not the person operating it. No IP reputation score or threat-actor attribution is invented.
